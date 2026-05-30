@@ -3,12 +3,17 @@ from connectors.contact import enrich
 from tools.scorer import score
 from tools.emailer import generate
 from crm.db import init_db
+from core.logger import log
 
-def run():
+def run_pipeline():
 
     init_db()
 
     jobs = fetch_jobs('Portsmouth VA')
+
+    if not jobs['success']:
+        log('pipeline_failed', {'reason': 'job_fetch_failed'})
+        return
 
     for job in jobs['data']:
 
@@ -18,7 +23,8 @@ def run():
         lead = score(job)
         emails = generate(contact['data'], company, job, lead['data']['signals'])
 
-        print('Processed:', company, lead['data']['score'])
-
-if __name__ == '__main__':
-    run()
+        log('job_fetch', job)
+        log('lead_processed', {
+            'company': company,
+            'score': lead['data']['score']
+        })
