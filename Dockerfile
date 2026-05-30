@@ -5,5 +5,5 @@ COPY . /app
 
 RUN pip install -r requirements.txt
 
-# IMPORTANT: use  for Render
-CMD ["sh", "-c", "uvicorn api.server:app --host 0.0.0.0 --port \"]
+# Render-safe: avoid sh parsing completely
+CMD ["uvicorn", "api.server:app", "--host", "0.0.0.0", "--port", "10000"]

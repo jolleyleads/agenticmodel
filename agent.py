@@ -11,20 +11,29 @@ def run_pipeline():
 
     jobs = fetch_jobs('Portsmouth VA')
 
-    if not jobs['success']:
-        log('pipeline_failed', {'reason': 'job_fetch_failed'})
+    if not jobs.get('success'):
+        log('pipeline_error', {'stage': 'job_fetch_failed'})
         return
 
     for job in jobs['data']:
 
-        company = job['company']
+        try:
+            company = job['company']
 
-        contact = enrich(company, job['location'])
-        lead = score(job)
-        emails = generate(contact['data'], company, job, lead['data']['signals'])
+            contact = enrich(company, job['location'])
+            lead = score(job)
+            emails = generate(
+                contact['data'],
+                company,
+                job,
+                lead['data']['signals']
+            )
 
-        log('job_fetch', job)
-        log('lead_processed', {
-            'company': company,
-            'score': lead['data']['score']
-        })
+            log('job_fetch', job)
+            log('lead_processed', {
+                'company': company,
+                'score': lead['data']['score']
+            })
+
+        except Exception as e:
+            log('lead_error', {'company': job.get('company'), 'error': str(e)})
